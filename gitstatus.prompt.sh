@@ -33,16 +33,17 @@ function gitstatus_prompt_update() {
   gitstatus_query "$@"                  || return 1  # error
   [[ "$VCS_STATUS_RESULT" == ok-sync ]] || return 0  # not a git repo
 
-  local      reset=$'\e[0m'         # no color
-  local      clean=$'\e[38;5;076m'  # green foreground
-  local  untracked=$'\e[38;5;014m'  # teal foreground
-  local   modified=$'\e[38;5;011m'  # yellow foreground
-  local conflicted=$'\e[38;5;196m'  # red foreground
+  local      reset=$'\001\e[0m\002'         # no color
+  local      clean=$'\001\e[38;5;76m\002'  # green foreground
+  local  untracked=$'\001\e[38;5;14m\002'  # teal foreground
+  local   modified=$'\001\e[38;5;11m'\002  # yellow foreground
+  local conflicted=$'\001\e[38;5;196m\002'  # red foreground
 
   local p
 
   local where  # branch name, tag or commit
   if [[ -n "$VCS_STATUS_LOCAL_BRANCH" ]]; then
+    p+="${reset}"
     where="$VCS_STATUS_LOCAL_BRANCH"
   elif [[ -n "$VCS_STATUS_TAG" ]]; then
     p+="${reset}#"
@@ -78,7 +79,7 @@ function gitstatus_prompt_update() {
   # ?42 if have untracked files. It's really a question mark, your font isn't broken.
   (( VCS_STATUS_NUM_UNTRACKED  )) && p+=" ${untracked}?${VCS_STATUS_NUM_UNTRACKED}"
 
-  GITSTATUS_PROMPT="${p}${reset}"
+  GITSTATUS_PROMPT="(${p}${reset})"
 }
 
 # Start gitstatusd in the background.
@@ -96,8 +97,16 @@ shopt -s promptvars
 #
 #   user@host ~/projects/skynet master ⇡42
 #   $ █
-PS1='\[\033[01;32m\]\u@\h\[\033[00m\] '           # green user@host
-PS1+='\[\033[01;34m\]\w\[\033[00m\]'              # blue current working directory
-PS1+='${GITSTATUS_PROMPT:+ $GITSTATUS_PROMPT}'    # git status (requires promptvars option)
-PS1+='\n\[\033[01;$((31+!$?))m\]\$\[\033[00m\] '  # green/red (success/error) $/# (normal/root)
-PS1+='\[\e]0;\u@\h: \w\a\]'                       # terminal title: user@host: dir
+# PS1='\[\033[01;32m\]\u@\h\[\033[00m\] '           # green user@host
+# PS1+='\[\033[01;34m\]\w\[\033[00m\]'              # blue current working directory
+# PS1+='${GITSTATUS_PROMPT:+ $GITSTATUS_PROMPT}'    # git status (requires promptvars option)
+# PS1+='\n\[\033[01;$((31+!$?))m\]\$\[\033[00m\] '  # green/red (success/error) $/# (normal/root)
+# PS1+='\[\e]0;\u@\h: \w\a\]'                       # terminal title: user@host: dir
+
+# Example:
+#
+#    [~/projects/skynet] (master ⇡42) $
+PS1='\[\033[01;34m\]\w\[\033[00m\]'              # blue current working directory
+PS1+='${GITSTATUS_PROMPT:+$GITSTATUS_PROMPT}'    # git status (requires promptvars option)
+PS1+='\[\033[01;$((31+!$?))m\]\$\[\033[00m\] '  # green/red (success/error) $/# (normal/root)
+
